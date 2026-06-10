@@ -2,33 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Look up geolocation and network details for any IP address.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="css/main.css">
-    <title>Other IP Info</title>
+    <title>IP Info — Look up an IP</title>
 </head>
 <body>
+    <main class="app">
+        <nav class="tabs">
+            <a class="tab" href="index.html">Your IP</a>
+            <a class="tab is-active" href="other-ip.html">Look up an IP</a>
+        </nav>
 
-    <div class="container-2" id="other-ip-info">
+        <section class="card" id="other-ip-info">
+            <header class="card__header">
+                <h1>Look up an IP</h1>
+                <p class="card__subtitle">Enter any IPv4 or IPv6 address to inspect it.</p>
+            </header>
 
-        <h1>Other IP Info</h1>
+            <form class="search" id="search-form">
+                <input type="text" id="other-input-ip" name="ip"
+                       placeholder="e.g. 8.8.8.8" autocomplete="off"
+                       spellcheck="false" aria-label="IP address">
+                <button class="btn" type="submit">Look up</button>
+            </form>
 
-        <p>IP: <span id="other-ip"></span></p>
-        <p>Continent: <span id="other-continent"></span></p>
-        <p>Currency: <span id="other-currency"></span></p>
-        <p>Country: <span id="other-country"></span></p>
-        <p>Timezone: <span id="other-timezone"></span></p>
+            <div class="status" id="status" role="status" hidden></div>
 
-        <h1>Special Info</h1>
-        
-        <p>ASN: <span id="other-asn"></span></p>
-        <p>ISP: <span id="other-isp"></span></p>
-        <p>Host: <span id="other-host"></span></p>
-        <input type="text" id="other-input-ip" placeholder="Enter IP [Press Enter For Submit]">
+            <dl class="details" id="details" hidden>
+                <div class="detail detail--ip">
+                    <dt>IP Address</dt>
+                    <dd>
+                        <span id="other-ip"></span>
+                        <button class="copy" id="copy-ip" type="button" title="Copy IP" aria-label="Copy IP">Copy</button>
+                    </dd>
+                </div>
+                <div class="detail"><dt>Country</dt><dd><span id="other-flag"></span> <span id="other-country"></span></dd></div>
+                <div class="detail"><dt>City</dt><dd id="other-city"></dd></div>
+                <div class="detail"><dt>Continent</dt><dd id="other-continent"></dd></div>
+                <div class="detail"><dt>Currency</dt><dd id="other-currency"></dd></div>
+                <div class="detail"><dt>Timezone</dt><dd id="other-timezone"></dd></div>
+                <div class="detail"><dt>ASN</dt><dd id="other-asn"></dd></div>
+                <div class="detail"><dt>ISP</dt><dd id="other-isp"></dd></div>
+                <div class="detail"><dt>Org</dt><dd id="other-org"></dd></div>
+            </dl>
+        </section>
 
-        <a href="index.html">Back To Your IP Info</a>
-    </div>
+        <footer class="foot">Data via <a href="https://ipwho.is" target="_blank" rel="noopener">ipwho.is</a></footer>
+    </main>
 
-    <script src="js/index.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/other.js"></script>
 </body>
 </html>

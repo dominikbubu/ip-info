@@ -1,55 +1,52 @@
-window.addEventListener('load', function() {
-		fetch("https://api.ip2loc.com/dQXI9koZ2Si4DOhmOxVphdjt1IMDJ8d2/detect")
-		.then(response => response.json())
-		.then(data => {
-		
-		let ip = document.getElementById('ip'),
-			continent = document.getElementById('continent'),
-			currency = document.getElementById('currency'),
-			country = document.getElementById('country'),
-			city = document.getElementById('city')
-			timezone = document.getElementById('timezone');
+// "Your IP" page — detects and displays the visitor's own public IP.
 
-			ip.innerHTML = data.connection.ip;
-			continent.innerHTML = data.location.continent.name;
-			currency.innerHTML =  data.currency.code[0];
-			country.innerHTML = data.location.country.name;
-			city.innerHTML = data.location.city;
-			timezone.innerHTML = data.time.zone;
-	});
-});
+const statusEl = document.getElementById('status');
+const detailsEl = document.getElementById('details');
+const retryEl = document.getElementById('retry');
+const cardEl = document.getElementById('your-ip');
 
-const input = document.getElementById('other-input-ip');
+function showLoading() {
+    detailsEl.hidden = true;
+    retryEl.hidden = true;
+    statusEl.hidden = false;
+    statusEl.classList.remove('status--error');
+    statusEl.innerHTML = '<span class="spinner" aria-hidden="true"></span><span>Detecting your IP…</span>';
+    cardEl.setAttribute('aria-busy', 'true');
+}
 
-input.addEventListener('keypress', function getIpInfo(e) {
-	if(e.key === "Enter") {
-		const ip = input.value;
+function showError(message) {
+    statusEl.hidden = false;
+    statusEl.classList.add('status--error');
+    statusEl.textContent = message;
+    retryEl.hidden = false;
+    cardEl.setAttribute('aria-busy', 'false');
+}
 
-		fetch(`https://json.geoiplookup.io/${ip}`)
-		.then(response => response.json()).catch()
-		.then(data => {
-			console.log(data)
+function render(info) {
+    setText('ip', info.ip);
+    setText('flag', info.flag);
+    setText('country', info.country);
+    setText('city', info.city);
+    setText('continent', info.continent);
+    setText('currency', info.currency);
+    setText('timezone', info.timezone);
+    setText('isp', info.isp);
 
-		let other_ip = document.getElementById('other-ip') 
-		other_continent = document.getElementById('other-continent'),
-		other_currency = document.getElementById('other-currency'),
-		other_country = document.getElementById('other-country'),
-		other_city = document.getElementById('other-city')
-		other_timezone = document.getElementById('other-timezone'),
-		other_asn = document.getElementById('other-asn'),
-		other_isp = document.getElementById('other-isp'),
-		other_host = document.getElementById('other-host');
+    statusEl.hidden = true;
+    detailsEl.hidden = false;
+    cardEl.setAttribute('aria-busy', 'false');
+}
 
-		other_ip.innerHTML = data.ip;
-		other_continent.innerHTML = data.continent_name;
-		other_currency.innerHTML =  data.currency_code;
-		other_country.innerHTML = data.country_name;
-		other_timezone.innerHTML = data.timezone_name;
-		other_asn.innerHTML = data.asn;
-		other_isp.innerHTML = data.isp;
-		other_host.innerHTML = data.hostname;
-		});
-	} else{
-		return
-	};
-});
+async function load() {
+    showLoading();
+    try {
+        const info = await fetchIpInfo();
+        render(info);
+    } catch (err) {
+        showError(err.message || 'Something went wrong. Please try again.');
+    }
+}
+
+retryEl.addEventListener('click', load);
+wireCopyButton('copy-ip', 'ip');
+window.addEventListener('load', load);
