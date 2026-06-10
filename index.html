@@ -3,53 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="See your public IP address and geolocation details at a glance.">
+    <meta name="description" content="A dark IP geolocation dashboard — see your public IP on a map with full network and location details, and look up any address.">
+    <title>IP Info — Geolocation Dashboard</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
     <link rel="stylesheet" href="css/main.css">
-    <title>IP Info — Your IP</title>
 </head>
 <body>
-    <main class="app">
-        <nav class="tabs">
-            <a class="tab is-active" href="index.html">Your IP</a>
-            <a class="tab" href="other-ip.html">Look up an IP</a>
-        </nav>
-
-        <section class="card" id="your-ip" aria-busy="true">
-            <header class="card__header">
-                <h1>Your IP Info</h1>
-                <p class="card__subtitle">A live snapshot of your public IP address.</p>
-            </header>
-
-            <div class="status" id="status" role="status">
-                <span class="spinner" aria-hidden="true"></span>
-                <span>Detecting your IP…</span>
+    <div class="dashboard">
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand__dot"></span>
+                <span class="brand__name">IP&nbsp;Info</span>
             </div>
+            <form class="search" id="search-form" autocomplete="off">
+                <svg class="search__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 21l-4.3-4.3M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <input type="text" id="ip-input" name="ip" spellcheck="false"
+                       placeholder="Look up any IP — or leave blank for your own"
+                       aria-label="IP address to look up">
+                <button class="btn" type="submit">Look up</button>
+                <button class="btn btn--ghost" type="button" id="me-btn" title="Show my IP">My IP</button>
+            </form>
+        </header>
 
-            <dl class="details" id="details" hidden>
-                <div class="detail detail--ip">
-                    <dt>IP Address</dt>
-                    <dd>
-                        <span id="ip"></span>
-                        <button class="copy" id="copy-ip" type="button" title="Copy IP" aria-label="Copy IP">Copy</button>
-                    </dd>
+        <main class="grid">
+            <!-- Hero / primary IP -->
+            <section class="panel panel--hero" id="hero">
+                <div class="hero__top">
+                    <span class="badge" id="ip-badge">Your IP</span>
+                    <span class="hero__flag" id="hero-flag"></span>
                 </div>
-                <div class="detail"><dt>Country</dt><dd><span id="flag"></span> <span id="country"></span></dd></div>
-                <div class="detail"><dt>City</dt><dd id="city"></dd></div>
-                <div class="detail"><dt>Continent</dt><dd id="continent"></dd></div>
-                <div class="detail"><dt>Currency</dt><dd id="currency"></dd></div>
-                <div class="detail"><dt>Timezone</dt><dd id="timezone"></dd></div>
-                <div class="detail"><dt>ISP</dt><dd id="isp"></dd></div>
-            </dl>
+                <div class="hero__ip">
+                    <span id="hero-ip" class="skeleton skeleton--text">&nbsp;</span>
+                    <button class="copy" id="copy-ip" type="button" title="Copy IP">Copy</button>
+                </div>
+                <div class="hero__place" id="hero-place"></div>
+                <div class="hero__meta">
+                    <span class="chip" id="hero-type"></span>
+                    <span class="chip" id="hero-source"></span>
+                </div>
+            </section>
 
-            <button class="btn btn--ghost" id="retry" type="button" hidden>Try again</button>
-        </section>
+            <!-- Map -->
+            <section class="panel panel--map">
+                <div id="map" role="img" aria-label="Map of the IP location"></div>
+                <div class="map__overlay" id="map-empty">Locating…</div>
+            </section>
 
-        <footer class="foot">Data via <a href="https://ipwho.is" target="_blank" rel="noopener">ipwho.is</a></footer>
-    </main>
+            <!-- Stat groups -->
+            <section class="panel" id="card-location">
+                <h2 class="panel__title">Location</h2>
+                <dl class="stats">
+                    <div><dt>City</dt><dd id="s-city">—</dd></div>
+                    <div><dt>Region</dt><dd id="s-region">—</dd></div>
+                    <div><dt>Postal</dt><dd id="s-postal">—</dd></div>
+                    <div><dt>Country</dt><dd id="s-country">—</dd></div>
+                    <div><dt>Continent</dt><dd id="s-continent">—</dd></div>
+                    <div><dt>Coordinates</dt><dd id="s-coords">—</dd></div>
+                </dl>
+            </section>
 
-    <script src="js/api.js"></script>
-    <script src="js/index.js"></script>
+            <section class="panel" id="card-network">
+                <h2 class="panel__title">Network</h2>
+                <dl class="stats">
+                    <div><dt>ASN</dt><dd id="s-asn">—</dd></div>
+                    <div><dt>ISP</dt><dd id="s-isp">—</dd></div>
+                    <div class="stats__wide"><dt>Organization</dt><dd id="s-org">—</dd></div>
+                </dl>
+            </section>
+
+            <section class="panel" id="card-time">
+                <h2 class="panel__title">Time &amp; Region</h2>
+                <dl class="stats">
+                    <div><dt>Local time</dt><dd id="s-time">—</dd></div>
+                    <div><dt>Timezone</dt><dd id="s-tz">—</dd></div>
+                    <div><dt>UTC offset</dt><dd id="s-utc">—</dd></div>
+                    <div><dt>Currency</dt><dd id="s-currency">—</dd></div>
+                    <div><dt>Calling code</dt><dd id="s-calling">—</dd></div>
+                </dl>
+            </section>
+        </main>
+
+        <div class="toast" id="error" role="alert" hidden></div>
+
+        <footer class="foot">
+            No tracking · no API key · data via
+            <a href="https://ipwho.is" target="_blank" rel="noopener">ipwho.is</a>
+            with <a href="https://ipapi.co" target="_blank" rel="noopener">ipapi.co</a> fallback
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="js/providers.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
